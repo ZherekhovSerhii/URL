@@ -2,15 +2,14 @@
 
 class URL {
 public:
-  URL(uint16_t L = 0, std::string A = "", bool S = false)
-      : level(L), address(A), safe(S) {}
-
-  ~URL() {}
+  URL(uint16_t L, std::string, URL_TYPE);
+  ~URL() = default;
 
   const char *getAddress();
+  void print();
 
 private:
   uint16_t level;
   std::string address;
-  bool safe;
+  URL_TYPE type;
 };

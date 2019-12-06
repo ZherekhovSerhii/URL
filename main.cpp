@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 
 #define CURL_STATICLIB
 #include "curl\curl.h"
@@ -13,9 +14,10 @@
 
 #include "Site.hpp"
 #include "URL.hpp"
+#include "URL_TYPE.hpp"
 
-static int writer(char *data, size_t size, size_t nmemb,
-                  std::string *writerData) {
+static int get_content(char *data, size_t size, size_t nmemb,
+                       std::string *writerData) {
   if (writerData == NULL)
     return 0;
 
@@ -25,12 +27,15 @@ static int writer(char *data, size_t size, size_t nmemb,
 }
 
 int main(int argc, char *argv[]) {
-  if (argc == 0 || argc == 1)
+  if (argc <= 1) {
+    std::cout << "To start parcing write the URL after the name of programm"
+              << std::endl;
     return 0;
+  }
 
   if (argc >= 2) {
 
-    Site s(URL(0, argv[1], true));
+    Site s(URL(0, argv[1], URL_TYPE::HTTPS));
 
     std::string content;
 
@@ -39,14 +44,16 @@ int main(int argc, char *argv[]) {
     if (curl) {
       curl_easy_setopt(curl, CURLOPT_URL, s.getURL());
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s.data);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writer);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, get_content);
       CURLcode code = curl_easy_perform(curl);
+      if (code != CURLcode::CURLE_OK) {
+        std::cout << "\nCURL_EASY_PERFORM ERROR\n";
+      }
       curl_easy_cleanup(curl);
     }
 
-    std::cout << s.data;
-
     s.search_for_inner_urls();
+    s.print_inner_urls();
 
     std::cin.get();
     return 0;
